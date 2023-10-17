@@ -383,14 +383,15 @@ void loop()
 
         if (ai.az - 180 > ai_cur.az)
         {
-          stepper1.setupMoveInRevolutions((ai.az - 360) / 360); // short way through zero
+          ai.az -= 360; // short way through zero
         }
+
         else if (ai_cur.az - 180 > ai.az)
         {
-          stepper1.setupMoveInRevolutions((ai.az + 360) / 360); // short way through zero
+           ai.az += 360; // short way through zero
         }
-        else
-          stepper1.setupMoveInRevolutions(ai.az / 360);
+        
+        stepper1.setupMoveInRevolutions(ai.az / 360);
         stepper2.setupMoveInRevolutions(ai.ele / 360);
         while (!stepper1.motionComplete() || !stepper2.motionComplete())
           delay(5);
