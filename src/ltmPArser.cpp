@@ -99,7 +99,7 @@ bool LTMParser::parseChar(char data)
                     telemetryData.gpsSats = raw >> 2;
                     telemetryData.gpsFix = raw & 0x03;
 
-                    gpsDataReceived = true;
+                    gpsDataUpdated = true;
 
                     break;
 
@@ -126,9 +126,9 @@ bool LTMParser::parseChar(char data)
     return res;
 }
 
-bool LTMParser::isGpsDataReceived()
-{
-    return gpsDataReceived;
+bool LTMParser::isGpsDataUpdated()
+{           
+    return gpsDataUpdated;
 }
 
 remoteData_t LTMParser::getTelemetryData()

@@ -20,9 +20,9 @@ struct GpsData
 
 struct AzimuthInfo
 {
-    FPD_TYPE az;   // azimuth
-    FPD_TYPE ele;  // elevation
-    FPD_TYPE dist; // distance
+    FPD_TYPE az {0};   // azimuth
+    FPD_TYPE ele {0};  // elevation
+    FPD_TYPE dist {0}; // distance
 };
 
 struct Point

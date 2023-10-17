@@ -94,7 +94,7 @@ typedef struct remoteData_s
   int32_t longitude{0};
   int32_t altitude{0};
   uint8_t groundSpeed{0};
-  int16_t hdop{9999999};
+  int16_t hdop{INT16_MAX};
   uint8_t gpsFix{0};
   uint8_t gpsSats{0};
 
@@ -119,12 +119,12 @@ private:
   int readInt(uint8_t offset);
   int32_t readInt32(uint8_t offset);
 
-  bool gpsDataReceived = false;
+  bool gpsDataUpdated = false;
   bool lastFrameCheckSumErr = false;
 
 public:
   bool parseChar(char data);
-  bool isGpsDataReceived();
+  bool isGpsDataUpdated();
 
   remoteData_t getTelemetryData();
 };

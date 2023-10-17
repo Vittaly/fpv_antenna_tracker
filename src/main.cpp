@@ -14,7 +14,6 @@
 #include <common/common.h>
 #include <minimal/minimal.h>*/
 
-
 // compass
 
 // first motor (azimuth) pins
@@ -109,7 +108,7 @@ void tim4_setup()
   tim4.resume();
 }
 
- //#define COMPASS_ENABLE
+// #define COMPASS_ENABLE
 //  #define GPS_ENABLE
 
 #ifdef COMPASS_ENABLE
@@ -311,8 +310,6 @@ void setLocation()
 
 #endif
 
-
-
 void setup()
 {
   // delay(10000);
@@ -345,102 +342,82 @@ GpsData gp;
 
 LTMParser ltpParser;
 
-AzimuthInfo ai;
+AzimuthInfo ai, ai_cur;
 AltAzimuthRange altAzimuthRange;
 
 void loop()
 {
 
-
   if (SerialUSB.available())
   {
     uint8_t byte = SerialUSB.read();
-     if (ltpParser.parseChar(byte) && ltpParser.isGpsDataReceived()) {
-    #ifdef DEBUG_INFO
-    SerialUSB.println("received LTP frame");
-    #endif
+    if (ltpParser.parseChar(byte) && ltpParser.isGpsDataUpdated())
+    {
+#ifdef DEBUG_INFO
+      SerialUSB.println("received LTP frame");
+#endif
 
-     remoteData_t telemetry = ltpParser.getTelemetryData();
-     if (isHomeSetted) {
-          ai = altAzimuthRange.calculate({static_cast<FPD_TYPE>(telemetry.latitude / 1E7), 
-                                        static_cast<FPD_TYPE>(telemetry.longitude / 1E7), 
+      remoteData_t telemetry = ltpParser.getTelemetryData();
+      if (isHomeSetted)
+      {
+        ai_cur = ai;
+        ai = altAzimuthRange.calculate({static_cast<FPD_TYPE>(telemetry.latitude / 1E7),
+                                        static_cast<FPD_TYPE>(telemetry.longitude / 1E7),
                                         static_cast<FPD_TYPE>(telemetry.altitude / 1E2)});
 
-         
 #ifdef DEBUG_INFO
-          SerialUSB.println("Look at position:");
-          SerialUSB.print("lat:");
-          SerialUSB.println(static_cast<FPD_TYPE>(telemetry.latitude / 1E7));
-          SerialUSB.print("lon:");
-          SerialUSB.println(static_cast<FPD_TYPE>(telemetry.longitude / 1E7));
-          SerialUSB.print("alt:");
-          SerialUSB.println(static_cast<FPD_TYPE>(telemetry.altitude / 1E2));
-          SerialUSB.println("-----");
-          SerialUSB.print("az:");
-          SerialUSB.println(ai.az);
-          SerialUSB.print("ele:");
-          SerialUSB.println(ai.ele);
-
-          
+        SerialUSB.println("Look at position:");
+        SerialUSB.print("lat:");
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.latitude / 1E7));
+        SerialUSB.print("lon:");
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.longitude / 1E7));
+        SerialUSB.print("alt:");
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.altitude / 1E2));
+        SerialUSB.println("-----");
+        SerialUSB.print("az:");
+        SerialUSB.println(ai.az);
+        SerialUSB.print("ele:");
+        SerialUSB.println(ai.ele);
 
 #endif
-          stepper1.setupMoveInRevolutions(ai.az / 360);
-          stepper2.setupMoveInRevolutions(ai.ele / 360);
-          while (!stepper1.motionComplete() || !stepper2.motionComplete())
-            delay(50);
+
+        if (ai.az - 180 > ai_cur.az)
+        {
+          stepper1.setupMoveInRevolutions((ai.az - 360) / 360); // short way through zero
+        }
+        else if (ai_cur.az - 180 > ai.az)
+        {
+          stepper1.setupMoveInRevolutions((ai.az + 360) / 360); // short way through zero
         }
         else
-        {
-          altAzimuthRange.setObserverLocation({static_cast<FPD_TYPE>(telemetry.latitude / 1E7), 
-                                        static_cast<FPD_TYPE>(telemetry.longitude / 1E7), 
-                                        static_cast<FPD_TYPE>(telemetry.altitude / 1E2)});
+          stepper1.setupMoveInRevolutions(ai.az / 360);
+        stepper2.setupMoveInRevolutions(ai.ele / 360);
+        while (!stepper1.motionComplete() || !stepper2.motionComplete())
+          delay(5);
+      }
+      else
+      {
+        altAzimuthRange.setObserverLocation({static_cast<FPD_TYPE>(telemetry.latitude / 1E7),
+                                             static_cast<FPD_TYPE>(telemetry.longitude / 1E7),
+                                             static_cast<FPD_TYPE>(telemetry.altitude / 1E2)});
 #ifdef DEBUG_INFO
-          SerialUSB.println("Set home position:");
-          SerialUSB.print("lat:");
-          SerialUSB.println(telemetry.latitude / 1E7);
-          SerialUSB.print("lon:");
-          SerialUSB.println(telemetry.longitude / 1E7);
-          SerialUSB.print("alt:");
-          SerialUSB.println(telemetry.altitude / 1E2);
+        SerialUSB.println("Set home position:");
+        SerialUSB.print("lat:");
+        SerialUSB.println(telemetry.latitude / 1E7);
+        SerialUSB.print("lon:");
+        SerialUSB.println(telemetry.longitude / 1E7);
+        SerialUSB.print("alt:");
+        SerialUSB.println(telemetry.altitude / 1E2);
 #endif
 
-          isHomeSetted = true;
-        }
+        isHomeSetted = true;
+      }
+    }
   }
-  }
-
-  /*  digitalWrite(LED_BUILTIN, (LEDOn13 = !LEDOn13));
-
-   SerialUSB.println("Move 0.3 revolutions");
-
-   stepper1.setupMoveInRevolutions((0.3));
-   stepper2.setupMoveInRevolutions((0.28));
-
-   altAzimuthRange.calculate({34,45,20});
-
-   //
-   // execute the moves
-   //
-   while (!stepper1.motionComplete() || !stepper2.motionComplete())
-   {
-     SerialUSB.println(stepper1.getCurrentPositionInSteps());
-     delay(50);
-   }
-
-   digitalWrite(LED_BUILTIN, (LEDOn13 = !LEDOn13));
-
-   SerialUSB.println("Move backward 0.3 revolutions");
-   stepper1.setupMoveInRevolutions((-0.3));
-   stepper2.setupMoveInRevolutions((0));
-
-   while (!stepper1.motionComplete() || !stepper2.motionComplete())
-   {
-     SerialUSB.println(stepper1.getCurrentPositionInSteps());
-     delay(50);
-   } */
 }
 
-void yield(void)
-{
-  motorMotionProcessing();
-}
+
+  void yield(void)
+  {
+    motorMotionProcessing();
+  }
