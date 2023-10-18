@@ -5,6 +5,7 @@
 #include <SpeedyStepper.h>
 #include <AltAzimuttRange.h>
 #include <ltmParser.h>
+
 /*#include <minimal/mavlink.h>
 #include <common/mavlink_msg_global_position_int.h>
 #include <common/mavlink_msg_command_int.h>
@@ -357,7 +358,7 @@ void loop()
       SerialUSB.println("received LTP frame");
 #endif
 
-      remoteData_t telemetry = ltpParser.getTelemetryData();
+      GPSFrameData_s telemetry = ltpParser.getGPSData();
       if (isHomeSetted)
       {
         ai_cur = ai;
@@ -368,16 +369,18 @@ void loop()
 #ifdef DEBUG_INFO
         SerialUSB.println("Look at position:");
         SerialUSB.print("lat:");
-        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.latitude / 1E7));
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.latitude / 1E7), 8);
         SerialUSB.print("lon:");
-        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.longitude / 1E7));
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.longitude / 1E7), 8);
         SerialUSB.print("alt:");
-        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.altitude / 1E2));
+        SerialUSB.println(static_cast<FPD_TYPE>(telemetry.altitude / 1E2), 8);
         SerialUSB.println("-----");
         SerialUSB.print("az:");
-        SerialUSB.println(ai.az);
+        SerialUSB.println(ai.az, 8);
         SerialUSB.print("ele:");
-        SerialUSB.println(ai.ele);
+        SerialUSB.println(ai.ele, 8);
+        SerialUSB.print("dist:");
+        SerialUSB.println(ai.dist, 8);
 
 #endif
 

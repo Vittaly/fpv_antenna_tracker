@@ -114,8 +114,8 @@ AzimuthInfo AltAzimuthRange::calculate(const GpsData& a, const GpsData& b)
     if ((br.z * br.z + br.y * br.y) < 1.0e-6)
         return res; // return zeroes
     FPD_TYPE theta = degrees(atan2(br.z, br.y));
-    SerialUSB.println("theta:");
-    SerialUSB.println(theta);
+    
+    
     res.az = 90 - theta;
     if (res.az < 0)
         res.az += 360;
@@ -124,23 +124,7 @@ AzimuthInfo AltAzimuthRange::calculate(const GpsData& a, const GpsData& b)
 
     br2 = normalizeVectorDiff(ap, bp);
 
-    SerialUSB.println("-----");
-    SerialUSB.println("ap:");
-    SerialUSB.println(ap.x);
-    SerialUSB.println(ap.y);
-    SerialUSB.println(ap.z);
-
-    SerialUSB.println("-----");
-    SerialUSB.println("bp:");
-    SerialUSB.println(bp.x);
-    SerialUSB.println(bp.y);
-    SerialUSB.println(bp.z);
-
-    SerialUSB.println("-----");
-    SerialUSB.println("br:");
-    SerialUSB.println(br2.x);
-    SerialUSB.println(br2.y);
-    SerialUSB.println(br2.z);
+   
 
     if (br2.x != 0 || br2.y != 0 || br2.z != 0)
     {
@@ -156,10 +140,7 @@ AzimuthInfo AltAzimuthRange::calculate(const GpsData& a, const GpsData& b)
 /// @return
 AzimuthInfo AltAzimuthRange::calculate(const GpsData& b)
 {
-    SerialUSB.println("calculate.observer:");
-    SerialUSB.println(observer.lat);
-    SerialUSB.println(observer.lon);
-    SerialUSB.println(observer.alt);
+   
 
     return calculate(observer, b);
 }

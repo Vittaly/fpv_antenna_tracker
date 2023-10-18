@@ -75,29 +75,33 @@ bool LTMParser::parseChar(char data)
                 {
                 case FrameCode::A:
 
-                    telemetryData.pitch = readInt(0);
-                    telemetryData.roll = readInt(2);
-                    telemetryData.heading = readInt(4);
+                    telemetryData.attitudeInfo.pitch = readInt(0);
+                    telemetryData.attitudeInfo.roll = readInt(2);
+                    telemetryData.attitudeInfo.heading = readInt(4);
+                    
+                    attitudeDataUpdated = false;
                     break;
 
                 case FrameCode::S:
 
-                    telemetryData.voltage = readInt(0);
-                    telemetryData.rssi = readByte(4);
+                    telemetryData.statusInfo.vbat = readInt(0);
+                    telemetryData.statusInfo.rssi = readByte(4);
                     raw = readByte(6);
-                    telemetryData.flightMode = raw >> 2;
+                    telemetryData.statusInfo.flightMode = raw >> 2;
+                    
+                    statusDataUpdated = true;
                     break;
 
                 case FrameCode::G:
 
-                    telemetryData.latitude = readInt32(0);
-                    telemetryData.longitude = readInt32(4);
-                    telemetryData.groundSpeed = readByte(8);
-                    telemetryData.altitude = readInt32(9);
+                    telemetryData.gpsInfo.latitude = readInt32(0);
+                    telemetryData.gpsInfo.longitude = readInt32(4);
+                    telemetryData.gpsInfo.groundSpeed = readByte(8);
+                    telemetryData.gpsInfo.altitude = readInt32(9);
 
                     raw = readByte(13);
-                    telemetryData.gpsSats = raw >> 2;
-                    telemetryData.gpsFix = raw & 0x03;
+                    telemetryData.gpsInfo.gpsSats = raw >> 2;
+                    telemetryData.gpsInfo.gpsFix = (GPSFix)(raw & 0x03);
 
                     gpsDataUpdated = true;
 
@@ -107,6 +111,8 @@ bool LTMParser::parseChar(char data)
 
                     telemetryData.hdop = readInt(0);
                     telemetryData.sensorStatus = readByte(2);
+                    extendDataUpdated = true;
+
                     break;
                 }
 
@@ -131,7 +137,19 @@ bool LTMParser::isGpsDataUpdated()
     return gpsDataUpdated;
 }
 
-remoteData_t LTMParser::getTelemetryData()
+RemoteData_s LTMParser::getTelemetryData()
 {
+    gpsDataUpdated = false;
+    attitudeDataUpdated = false;
+    statusDataUpdated = false;
+    extendDataUpdated = false;
+    
     return telemetryData;
+    
+}
+
+GPSFrameData_s& LTMParser::getGPSData()
+{
+    gpsDataUpdated = false;
+    return telemetryData.gpsInfo;
 }

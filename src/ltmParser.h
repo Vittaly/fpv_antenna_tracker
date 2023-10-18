@@ -77,32 +77,91 @@ const FrameProperties FrameTypeList[FRAME_TYPES_COUNT + 1] =
         (FrameProperties){FrameCode::UNKNOWN, 0}
         };
 
-#define FRAME_TYPE_UNKNOWN FrameTypeList[FRAME_TYPES_COUNT]     
+#define FRAME_TYPE_UNKNOWN FrameTypeList[FRAME_TYPES_COUNT]    
 
-typedef struct remoteData_s
-{
-  int pitch{0};
+
+enum GPSFix: uint8_t {
+ NO_FIX = 0,
+ FIX_2D = 1,
+ FIX_3D = 2
+};
+
+typedef struct GPSFrameData_s {
+  int32_t latitude {0};
+  int32_t longitude {0};
+  int32_t altitude {0};
+  uint8_t groundSpeed {0};
+  GPSFix gpsFix {GPSFix::NO_FIX};
+  uint8_t gpsSats {0};
+
+};
+
+typedef struct AttitudeFrameData_s{
+int pitch{0};
   int roll{0};
   int heading{0};
-  uint16_t voltage{0};
-  byte rssi{0};
-  bool armed{false};
-  bool failSafe{false};
-  byte flightMode{flightModes::Unknown};
 
+};
+
+
+
+
+struct StatusFrameData_s{
+  uint16_t vbat;
+  uint16_t current;
+  u_char rssi;
+  u_char airSpeed;
+  bool armed {false};
+  bool failSafe {false};
+  byte flightMode {flightModes::Unknown};
+};
+
+
+struct OriginFrameData_s{
   int32_t latitude{0};
   int32_t longitude{0};
   int32_t altitude{0};
-  uint8_t groundSpeed{0};
-  int16_t hdop{INT16_MAX};
-  uint8_t gpsFix{0};
-  uint8_t gpsSats{0};
+  u_char osdOn {0};
+  u_char fix {0};
+};
+
+struct NavigationFrameData_s{
+  u_char gpsMode;
+  u_char navMode;
+  u_char navAction;
+  u_char waypointN;
+  u_char nanErr;
+  u_char flags;
+};
+
+struct ExtendedFrameData_s{
+  uint16_t hhop;
+  byte sensorStatus;
+};
+
+
+
+struct RemoteData_s
+{
+  GPSFrameData_s gpsInfo;
+  AttitudeFrameData_s attitudeInfo;
+  StatusFrameData_s statusInfo;
+  OriginFrameData_s originInfo;
+  NavigationFrameData_s navigationInfo;
+  ExtendedFrameData_s extendedInfo;
+
+
+  
+
+  
+  uint16_t hdop {UINT16_MAX};
+
 
   int32_t homeLatitude{0};
   int32_t homeLongitude{0};
 
   uint8_t sensorStatus{0};
-} remoteData_t;
+};
 
 class LTMParser
 {
@@ -112,19 +171,24 @@ private:
   FrameProperties frameProperties = FRAME_TYPE_UNKNOWN;
 
   byte receiverIndex;
-  remoteData_t telemetryData;
+  RemoteData_s telemetryData;
 
   byte readByte(uint8_t offset);
   u_char checkSumCalc = 0;
   int readInt(uint8_t offset);
   int32_t readInt32(uint8_t offset);
 
+  bool attitudeDataUpdated = false;
+  bool extendDataUpdated = false;
   bool gpsDataUpdated = false;
+  bool statusDataUpdated = false;
+
   bool lastFrameCheckSumErr = false;
 
 public:
   bool parseChar(char data);
   bool isGpsDataUpdated();
 
-  remoteData_t getTelemetryData();
+  RemoteData_s getTelemetryData();
+  GPSFrameData_s& getGPSData();
 };
