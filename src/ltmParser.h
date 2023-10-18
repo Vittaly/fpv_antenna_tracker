@@ -86,7 +86,7 @@ enum GPSFix: uint8_t {
  FIX_3D = 2
 };
 
-typedef struct GPSFrameData_s {
+struct GPSFrameData_s {
   int32_t latitude {0};
   int32_t longitude {0};
   int32_t altitude {0};
@@ -96,7 +96,7 @@ typedef struct GPSFrameData_s {
 
 };
 
-typedef struct AttitudeFrameData_s{
+struct AttitudeFrameData_s{
 int pitch{0};
   int roll{0};
   int heading{0};

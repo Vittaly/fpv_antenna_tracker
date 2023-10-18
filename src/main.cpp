@@ -34,6 +34,8 @@
 #define SECOND_MOTOR_STEPS 200                    // steps per Revolution
 #define SECOND_MOTOR_MICROSTEPS 16                // microsteps per step
 
+#define MIN_ELEVATION_DEGREE -20 // gear limit. look at construction
+
 SpeedyStepper stepper1;
 SpeedyStepper stepper2;
 
@@ -366,6 +368,32 @@ void loop()
                                         static_cast<FPD_TYPE>(telemetry.longitude / 1E7),
                                         static_cast<FPD_TYPE>(telemetry.altitude / 1E2)});
 
+        if (ai.az - 180 > ai_cur.az)
+        {
+          ai.az -= 360; // short way through zero
+        }
+
+        else if (ai_cur.az - 180 > ai.az)
+        {
+          ai.az += 360; // short way through zero
+        }
+
+        if (ai.ele < MIN_ELEVATION_DEGREE)
+          ai.ele = MIN_ELEVATION_DEGREE;
+
+        // if motors motion still incomplete skip new data
+        if (stepper1.motionComplete() && stepper2.motionComplete())
+        {
+          stepper1.setupMoveInRevolutions(ai.az / 360);
+          stepper2.setupMoveInRevolutions(ai.ele / 360);
+        }
+        else
+        {
+#ifdef DEBUG_INFO
+          SerialUSB.println("motion incomplite. skeep moving");
+#endif
+        }
+
 #ifdef DEBUG_INFO
         SerialUSB.println("Look at position:");
         SerialUSB.print("lat:");
@@ -383,21 +411,6 @@ void loop()
         SerialUSB.println(ai.dist, 8);
 
 #endif
-
-        if (ai.az - 180 > ai_cur.az)
-        {
-          ai.az -= 360; // short way through zero
-        }
-
-        else if (ai_cur.az - 180 > ai.az)
-        {
-           ai.az += 360; // short way through zero
-        }
-        
-        stepper1.setupMoveInRevolutions(ai.az / 360);
-        stepper2.setupMoveInRevolutions(ai.ele / 360);
-        while (!stepper1.motionComplete() || !stepper2.motionComplete())
-          delay(5);
       }
       else
       {
@@ -418,10 +431,11 @@ void loop()
       }
     }
   }
+
+  motorMotionProcessing();
 }
 
-
-  void yield(void)
-  {
-    motorMotionProcessing();
-  }
+void yield(void)
+{
+  motorMotionProcessing();
+}
